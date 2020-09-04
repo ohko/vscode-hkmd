@@ -35,6 +35,25 @@ export async function activate(context: vscode.ExtensionContext) {
 	});
 
 	context.subscriptions.push(disposable);
+
+	setInterval(_ => { showStock(false) }, 15000)
+	showStock(true)
+}
+
+async function showStock(force: boolean) {
+	let code = <string>vscode.workspace.getConfiguration("hkmd").get("stock")
+	if (!code) return vscode.window.showInformationMessage(`setting: [hkmd.stock] not found!`);
+
+	let t = new Date()
+	if (!force && (t.getHours() < 9 || t.getHours() > 15)) return
+	let rs = await Axios.get("http://hq.sinajs.cn/list=" + code)
+	let arr = rs.data.split(",")
+	let name = arr[0]
+	let price = arr[3]
+	let yestoday = arr[2]
+	let tt = new Date(new Date().getTime() + 8 * 3600 * 1000).toISOString().substr(11, 8)
+	let per = (price - yestoday) / yestoday * 100
+	vscode.window.setStatusBarMessage("[" + tt + "] " + code + " [" + per.toFixed(2) + "%] " + (yestoday > price ? "↓" : "↑") + price)
 }
 
 async function search(key: string) {
