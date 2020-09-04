@@ -11,81 +11,61 @@ let cookie = ""
 // your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	// console.log('Congratulations, your extension "hktest" is now active!');
+	// register a content provider for the cowsay-scheme
+	context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider("mddoc", new class implements vscode.TextDocumentContentProvider {
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('hkmd.search', () => {
-		// The code you place here will be executed every time your command is executed
+		// emitter and its event
+		onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
+		onDidChange = this.onDidChangeEmitter.event;
 
+		provideTextDocumentContent(uri: vscode.Uri): Thenable<string> {
+			return (async _ => {
+				let x = await Axios.get(url + "/markdown/detail?ID=" + uri.path + "&preview=false", { headers: { cookie: cookie } })
+				if (x.data.no != 0) return x.data.data;
+				return x.data.data.Content;
+			})()
+		}
+	}));
+
+	let disposable = vscode.commands.registerCommand('hkmd.search', async () => {
 		cookie = <string>vscode.workspace.getConfiguration("hkmd").get("cookie")
 		if (!cookie) return vscode.window.showInformationMessage(`setting: [hkmd.cookie] not found!`);
 
-		// Display a message box to the user
-		// vscode.window.showInformationMessage('Hello World from hktest!');
-
-		// search("")
-		vscode.window.showInputBox({
-			placeHolder: 'For example: fedcba. But not: 123',
-			// value: 'abcdef',
-			// valueSelection: [2, 4],
-			// validateInput: text => {
-			// 	vscode.window.showInformationMessage(`Validating: ${text}`);
-			// 	return text === '123' ? 'Not 123!' : null;
-			// }
-		}).then(x => {
-			search(<string>x)
-		})
+		search(<string>await vscode.window.showInputBox({ placeHolder: 'For example: abc', }))
 	});
 
 	context.subscriptions.push(disposable);
-	// let a = vscode.window.createStatusBarItem()
-	// setInterval(_ => {
-	// 	a.text = (new Date()).toString()
-	// }, 1000)
-	// a.show()
 }
 
-function search(key: string) {
-	Axios.get(url + "/markdown/tree?key=" + key, { headers: { cookie: cookie } })
-		.then(x => {
-			console.log(x.data)
-			if (x.data.no != 0) return vscode.window.showInformationMessage("[Login error]" + x.data.data);
+async function search(key: string) {
+	let x = await Axios.get(url + "/markdown/tree?key=" + key, { headers: { cookie: cookie } })
+	// console.log(x.data)
+	if (x.data.no != 0) return vscode.window.showInformationMessage("[Login error]" + x.data.data);
 
-			let data = x.data.data
-			let options: Array<vscode.QuickPickItem> = []
-			for (let obj in data) {
-				for (let i = 0; i < data[obj].length; i++) {
-					let key: string = obj + "::" + data[obj][i].title
-					options.push({ label: key, description: data[obj][i].id });
-				}
-			}
+	let data = x.data.data
+	let options: Array<vscode.QuickPickItem> = []
+	for (let obj in data) {
+		for (let i = 0; i < data[obj].length; i++) {
+			let key: string = obj + "::" + data[obj][i].title
+			options.push({ label: key, description: data[obj][i].id });
+		}
+	}
 
-			const quickPick = vscode.window.createQuickPick();
-			quickPick.items = options
-			quickPick.onDidChangeSelection(selection => {
-				if (selection[0]) {
-					showDetail(<string>selection[0].description)
-				}
-				quickPick.hide()
-			});
-			quickPick.onDidHide(() => quickPick.dispose());
-			quickPick.show();
-		})
+	const quickPick = vscode.window.createQuickPick();
+	quickPick.items = options
+	quickPick.onDidChangeSelection(async selection => {
+		if (selection[0]) {
+			let uri = vscode.Uri.parse("mddoc:" + selection[0].description)
+			let doc = await vscode.workspace.openTextDocument(uri); // calls back into the provider
+			vscode.languages.setTextDocumentLanguage(doc, "markdown")
+			await vscode.window.showTextDocument(doc, { preview: true });
+		}
+		// vscode.commands.executeCommand("markdown.showPreviewToSide")
+		vscode.commands.executeCommand("markdown.showPreview")
+		quickPick.hide()
+	});
+	quickPick.onDidHide(() => quickPick.dispose());
+	quickPick.show();
 }
 
-function showDetail(id: string) {
-	Axios.get(url + "/markdown/detail?ID=" + id + "&preview=false", { headers: { cookie: cookie } })
-		.then(x => {
-			if (x.data.no != 0) return vscode.window.showInformationMessage(x.data.data);
-			vscode.workspace.openTextDocument({ language: "markdown", content: x.data.data.Content }).then(x => {
-				vscode.window.showTextDocument(x)
-			})
-		})
-}
-
-// this method is called when your extension is deactivated
 export function deactivate() { }
