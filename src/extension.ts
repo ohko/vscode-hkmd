@@ -41,19 +41,36 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 async function showStock(force: boolean) {
-	let code = <string>vscode.workspace.getConfiguration("hkmd").get("stock")
-	if (!code) return vscode.window.showInformationMessage(`setting: [hkmd.stock] not found!`);
+	let codes = <string[]>vscode.workspace.getConfiguration("hkmd").get("stock")
+	if (!codes) return vscode.window.showInformationMessage(`setting: [hkmd.stock] not found!`);
 
 	let t = new Date()
-	if (!force && (t.getHours() < 9 || t.getHours() > 15)) return
-	let rs = await Axios.get("http://hq.sinajs.cn/list=" + code)
-	let arr = rs.data.split(",")
-	let name = arr[0]
-	let price = arr[3]
-	let yestoday = arr[2]
-	let tt = new Date(new Date().getTime() + 8 * 3600 * 1000).toISOString().substr(11, 8)
-	let per = (price - yestoday) / yestoday * 100
-	vscode.window.setStatusBarMessage("[" + tt + "] " + code + " [" + per.toFixed(2) + "%] " + (yestoday > price ? "↓" : "↑") + price)
+	if (!force) {
+		// 9:00 ~ 15:00
+		if (t.getHours() < 9 || t.getHours() > 15) return
+		// week 1~5
+		if (t.getDay() == 0 || t.getDay() == 6) return
+	}
+
+	let html = []
+
+	for (let i in codes) {
+		let code = codes[i]
+
+		let res = await Axios.get("http://smartbox.gtimg.cn/s3/?v=2&q=" + code.substr(2) + "&t=all&c=1")
+		let name = JSON.parse('["' + res.data.split("~")[2] + '"]')[0]
+
+		let rs = await Axios.get("http://hq.sinajs.cn/list=" + code)
+		let arr = rs.data.split(",")
+		let price = arr[3]
+		let yestoday = arr[2]
+		let time = "[" + arr[31] + "] "
+		if (parseInt(i) > 0) time = ""
+		let per = (price - yestoday) / yestoday * 100
+		html.push(time + name + (yestoday > price ? " ↓" : " ↑") + price + " (" + per.toFixed(2) + "%)")
+	}
+
+	vscode.window.setStatusBarMessage(html.join(" | "))
 }
 
 async function search(key: string) {
