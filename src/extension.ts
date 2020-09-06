@@ -4,12 +4,29 @@ import * as vscode from 'vscode';
 import 'axios';
 import Axios from 'axios';
 
+export class StockListProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
+	private _onDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined | void> = new vscode.EventEmitter<vscode.TreeItem | undefined | void>();
+	readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined | void> = this._onDidChangeTreeData.event;
+
+	refresh(): void { this._onDidChangeTreeData.fire() }
+
+	getTreeItem(element: vscode.TreeItem): vscode.TreeItem { return element }
+
+	getChildren(element?: vscode.TreeItem): vscode.TreeItem[] {
+		return stockStatus.map(x => new vscode.TreeItem(x, vscode.TreeItemCollapsibleState.None))
+	}
+}
+
 const url = "https://md.lyl.hk"
 let cookie = ""
+let stockStatus: string[] = []
+let stockListProvider = new StockListProvider()
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
+
+	vscode.window.createTreeView('stockList', { treeDataProvider: stockListProvider });
 
 	// register a content provider for the cowsay-scheme
 	context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider("mddoc", new class implements vscode.TextDocumentContentProvider {
@@ -52,7 +69,7 @@ async function showStock(force: boolean) {
 		if (t.getDay() == 0 || t.getDay() == 6) return
 	}
 
-	let html = []
+	// let html = []
 
 	for (let i in codes) {
 		let code = codes[i]
@@ -67,10 +84,14 @@ async function showStock(force: boolean) {
 		let time = "[" + arr[31] + "] "
 		if (parseInt(i) > 0) time = ""
 		let per = (price - yestoday) / yestoday * 100
-		html.push(time + name + (yestoday > price ? " ↓" : " ↑") + price + " (" + per.toFixed(2) + "%)")
+		// html.push(time + name + (yestoday > price ? " ↓" : " ↑") + price + " (" + per.toFixed(2) + "%)")
+		if (name.length != 4) name += "    ".repeat(4 - name.length)
+		let msg = (yestoday > price ? "↓ " : "↑ ") + name + " ¥" + price + " (" + per.toFixed(2) + "%) " + arr[31]
+		stockStatus.push(msg)
 	}
 
-	vscode.window.setStatusBarMessage(html.join(" | "))
+	// vscode.window.setStatusBarMessage(html.join(" | "))
+	stockListProvider.refresh()
 }
 
 async function search(key: string) {

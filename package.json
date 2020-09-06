@@ -2,7 +2,7 @@
 	"name": "hkmd",
 	"displayName": "hkmd",
 	"description": "",
-	"version": "0.0.4",
+	"version": "0.0.5",
 	"engines": {
 		"vscode": "^1.48.0"
 	},
@@ -36,6 +36,14 @@
 					"description": "sh000001,sz000001"
 				}
 			}
+		},
+		"views": {
+			"explorer": [
+				{
+					"id": "stockList",
+					"name": "Stock List"
+				}
+			]
 		}
 	},
 	"scripts": {
