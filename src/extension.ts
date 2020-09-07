@@ -76,10 +76,12 @@ async function showStock(force: boolean) {
 	for (let i in codes) {
 		let code = codes[i]
 		let base = 0.0
+		let tips = ""
 		if (code.indexOf(",") > 0) {
 			let tmp = code.split(",")
-			code = tmp[0]
-			base = parseFloat(tmp[1])
+			code = tmp[0].trim()
+			base = parseFloat(tmp[1].trim())
+			if (tmp.length == 3) tips = " [" + tmp[2].trim() + "]"
 		}
 
 		let name: string
@@ -95,15 +97,18 @@ async function showStock(force: boolean) {
 		let price = arr[3]
 		let yestoday = arr[2]
 		if (base > 0) yestoday = base
-		let time = "[" + arr[31] + "] "
-		if (parseInt(i) > 0) time = ""
+		let time = arr[31]
+		// if (parseInt(i) > 0) time = ""
+		let now = new Date()
+		let diffSecond = (now.getTime() - new Date(now.toLocaleDateString() + " " + time).getTime()) / 1000
 		let per = (price - yestoday) / yestoday * 100
 		// html.push(time + name + (yestoday > price ? " ↓" : " ↑") + price + " (" + per.toFixed(2) + "%)")
 		if (name.length != 4) name += "    ".repeat(4 - name.length)
 		let arrow = " "
 		if (yestoday > price) arrow = " ↓ "
 		else if (yestoday < price) arrow = " ↑ "
-		let msg = name + arrow + "(" + per.toFixed(2) + "%) " + "¥" + price + " [" + arr[31] + "]"
+		let msg = name + arrow + "(" + per.toFixed(2) + "%) " + "¥" + price + tips
+		if (diffSecond > 60) msg += " +" + diffSecond.toFixed(0) + "s"
 		stockStatus.push(msg)
 	}
 	stockStatus.sort((x, y): number => {
