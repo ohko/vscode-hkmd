@@ -87,7 +87,10 @@ async function showStock(force: boolean) {
 		let per = (price - yestoday) / yestoday * 100
 		// html.push(time + name + (yestoday > price ? " ↓" : " ↑") + price + " (" + per.toFixed(2) + "%)")
 		if (name.length != 4) name += "    ".repeat(4 - name.length)
-		let msg = (yestoday > price ? "↓ " : "↑ ") + name + " ¥" + price + " (" + per.toFixed(2) + "%) " + arr[31]
+		let arrow = ""
+		if (yestoday > price) arrow = "↓ "
+		else if (yestoday < price) arrow = "↑ "
+		let msg = arrow + name + " ¥" + price + " (" + per.toFixed(2) + "%) " + arr[31]
 		stockStatus.push(msg)
 	}
 
