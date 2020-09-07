@@ -3,6 +3,7 @@
 import * as vscode from 'vscode';
 import 'axios';
 import Axios from 'axios';
+import * as path from 'path';
 
 export class StockListProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
 	private _onDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined | void> = new vscode.EventEmitter<vscode.TreeItem | undefined | void>();
@@ -10,10 +11,37 @@ export class StockListProvider implements vscode.TreeDataProvider<vscode.TreeIte
 
 	refresh(): void { this._onDidChangeTreeData.fire() }
 
-	getTreeItem(element: vscode.TreeItem): vscode.TreeItem { return element }
+	getTreeItem(element: vscode.TreeItem): vscode.TreeItem {
+		return element
+	}
 
 	getChildren(element?: vscode.TreeItem): vscode.TreeItem[] {
-		return stockStatus.map(x => new vscode.TreeItem(x, vscode.TreeItemCollapsibleState.None))
+		let hasChildren = []
+		for (let i in stockStatus) {
+			let name = stockStatus[i].split(" ")[0].trim()
+			if (stockStatus[i].indexOf("[") > 0) hasChildren.push(name)
+		}
+
+		let list = []
+		for (let i in stockStatus) {
+			let x = stockStatus[i]
+			let name = stockStatus[i].split(" ")[0].trim()
+			// let arrow = ""
+			if (!element && x.indexOf("[") > 0) continue
+			if (element && (x.indexOf("[") < 0 || element.label!.split(" ")[0].trim() != name)) continue
+			let tic = vscode.TreeItemCollapsibleState.None
+			if (hasChildren.includes(name) && !element) tic = vscode.TreeItemCollapsibleState.Collapsed
+
+			// if (x.indexOf("↑") > 0) arrow = path.join(__filename, '..', '..', "media", "arrow-up.svg")
+			// else if (x.indexOf("↓") > 0) arrow = path.join(__filename, '..', '..', "media", "arrow-down.svg")
+			// x = x.replace(" ↑ ", " ")
+			// x = x.replace(" ↓ ", " ")
+
+			let item = new vscode.TreeItem(x, tic)
+			// item.iconPath = arrow
+			list.push(item)
+		}
+		return list
 	}
 }
 
@@ -108,7 +136,8 @@ async function showStock(force: boolean) {
 		if (yestoday > price) arrow = " ↓ "
 		else if (yestoday < price) arrow = " ↑ "
 		let msg = name + arrow + "(" + per.toFixed(2) + "%) " + "¥" + price + tips
-		if (diffSecond > 60) msg += " +" + diffSecond.toFixed(0) + "s"
+		if (diffSecond > 180) msg += " ∞"
+		else if (diffSecond > 60) msg += " +" + diffSecond.toFixed(0) + "s"
 		stockStatus.push(msg)
 	}
 	stockStatus.sort((x, y): number => {
