@@ -38,8 +38,10 @@ export class StockListProvider implements vscode.TreeDataProvider<TreeItem> {
       vscode.window.createTreeView('stockList', { treeDataProvider: this });
       context.subscriptions.push(vscode.commands.registerCommand('stockList.click', this.itemClick.bind(this)));
 
-      setInterval(_ => { this.showStock(false) }, parseInt(<string>vscode.workspace.getConfiguration("hkmd").get("stockRefresh")) * 1000)
-      this.showStock(true)
+      context.subscriptions.push(vscode.commands.registerCommand('hkmd.stock', _ => {
+         setInterval(_ => { this.showStock(false) }, parseInt(<string>vscode.workspace.getConfiguration("hkmd").get("stockRefresh")) * 1000)
+         this.showStock(true)
+      }));
    }
 
    private _onDidChangeTreeData: vscode.EventEmitter<TreeItem | undefined | void> = new vscode.EventEmitter<TreeItem | undefined | void>();

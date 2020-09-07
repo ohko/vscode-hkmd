@@ -12,7 +12,8 @@
 	"publisher": "ohko",
 	"repository": "https://github.com/ohko/vscode-hkmd",
 	"activationEvents": [
-		"*"
+		"onCommand:hkmd.search",
+		"onCommand:hkmd.stock"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
@@ -20,6 +21,10 @@
 			{
 				"command": "hkmd.search",
 				"title": "HK Markdown docs"
+			},
+			{
+				"command": "hkmd.stock",
+				"title": "HK Stock Watch"
 			},
 			{
 				"command": "stockList.click",
