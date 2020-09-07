@@ -2,7 +2,7 @@
 	"name": "hkmd",
 	"displayName": "hkmd",
 	"description": "",
-	"version": "0.0.11",
+	"version": "0.0.12",
 	"engines": {
 		"vscode": "^1.48.0"
 	},
@@ -29,6 +29,11 @@
 					"type": "string",
 					"default": "",
 					"description": "cookie"
+				},
+				"hkmd.stockRefresh": {
+					"type": "number",
+					"default": 8,
+					"description": "stock refresh time of second"
 				},
 				"hkmd.stock": {
 					"type": "array",

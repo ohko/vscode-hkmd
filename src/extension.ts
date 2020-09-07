@@ -3,7 +3,7 @@
 import * as vscode from 'vscode';
 import 'axios';
 import Axios from 'axios';
-import * as path from 'path';
+// import * as path from 'path';
 
 export class StockListProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
 	private _onDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined | void> = new vscode.EventEmitter<vscode.TreeItem | undefined | void>();
@@ -30,7 +30,7 @@ export class StockListProvider implements vscode.TreeDataProvider<vscode.TreeIte
 			if (!element && x.indexOf("[") > 0) continue
 			if (element && (x.indexOf("[") < 0 || element.label!.split(" ")[0].trim() != name)) continue
 			let tic = vscode.TreeItemCollapsibleState.None
-			if (hasChildren.includes(name) && !element) tic = vscode.TreeItemCollapsibleState.Collapsed
+			if (hasChildren.includes(name) && !element) tic = vscode.TreeItemCollapsibleState.Expanded
 
 			// if (x.indexOf("↑") > 0) arrow = path.join(__filename, '..', '..', "media", "arrow-up.svg")
 			// else if (x.indexOf("↓") > 0) arrow = path.join(__filename, '..', '..', "media", "arrow-down.svg")
@@ -82,7 +82,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(disposable);
 
-	setInterval(_ => { showStock(false) }, 15000)
+	setInterval(_ => { showStock(false) }, parseInt(<string>vscode.workspace.getConfiguration("hkmd").get("stockRefresh")) * 1000)
 	showStock(true)
 }
 
