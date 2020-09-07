@@ -71,6 +71,7 @@ async function showStock(force: boolean) {
 
 	// let html = []
 
+	stockStatus.length = 0
 	for (let i in codes) {
 		let code = codes[i]
 
