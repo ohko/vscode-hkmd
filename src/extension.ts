@@ -21,6 +21,7 @@ const url = "https://md.lyl.hk"
 let cookie = ""
 let stockStatus: string[] = []
 let stockListProvider = new StockListProvider()
+let cache: Map<string, string> = new Map<string, string>()
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -74,14 +75,26 @@ async function showStock(force: boolean) {
 	stockStatus.length = 0
 	for (let i in codes) {
 		let code = codes[i]
+		let base = 0.0
+		if (code.indexOf(",") > 0) {
+			let tmp = code.split(",")
+			code = tmp[0]
+			base = parseFloat(tmp[1])
+		}
 
-		let res = await Axios.get("http://smartbox.gtimg.cn/s3/?v=2&q=" + code.substr(2) + "&t=all&c=1")
-		let name = JSON.parse('["' + res.data.split("~")[2] + '"]')[0]
+		let name: string
+		if (cache.has(code)) name = cache.get(code)!;
+		else {
+			let res = await Axios.get("http://smartbox.gtimg.cn/s3/?v=2&q=" + code.substr(2) + "&t=all&c=1")
+			name = JSON.parse('["' + res.data.split("~")[2] + '"]')[0]
+			cache.set(code, name)
+		}
 
 		let rs = await Axios.get("http://hq.sinajs.cn/list=" + code)
 		let arr = rs.data.split(",")
 		let price = arr[3]
 		let yestoday = arr[2]
+		if (base > 0) yestoday = base
 		let time = "[" + arr[31] + "] "
 		if (parseInt(i) > 0) time = ""
 		let per = (price - yestoday) / yestoday * 100
