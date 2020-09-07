@@ -50,6 +50,7 @@ let cookie = ""
 let stockStatus: string[] = []
 let stockListProvider = new StockListProvider()
 let cache: Map<string, string> = new Map<string, string>()
+let panel: vscode.WebviewPanel
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -73,14 +74,23 @@ export async function activate(context: vscode.ExtensionContext) {
 		}
 	}));
 
-	let disposable = vscode.commands.registerCommand('hkmd.search', async () => {
+	context.subscriptions.push(vscode.commands.registerCommand('hkmd.search', async () => {
 		cookie = <string>vscode.workspace.getConfiguration("hkmd").get("cookie")
 		if (!cookie) return vscode.window.showInformationMessage(`setting: [hkmd.cookie] not found!`);
 
 		search(<string>await vscode.window.showInputBox({ placeHolder: 'For example: abc', }))
-	});
+	}));
 
-	context.subscriptions.push(disposable);
+	context.subscriptions.push(vscode.commands.registerCommand('stockList.click', async (x) => {
+		let name = x.label.split(" ")[0].trim()
+		let code = cache.get(name)!
+		try { panel.title = name } catch (e) { panel = vscode.window.createWebviewPanel(code, name, vscode.ViewColumn.One) }
+		let html = "<table><tr><td><img src='http://image.sinajs.cn/newchart/min/n/" + cache.get(x.label.split(" ")[0].trim()) + ".gif?_+" + Math.random() + "'></td>"
+		html += "<td><img src='http://image.sinajs.cn/newchart/daily/n/" + cache.get(x.label.split(" ")[0].trim()) + ".gif?_+" + Math.random() + "'></td></tr>"
+		html += "<tr><td><img src='http://image.sinajs.cn/newchart/weekly/n/" + cache.get(x.label.split(" ")[0].trim()) + ".gif?_+" + Math.random() + "'></td>"
+		html += "<td><img src='http://image.sinajs.cn/newchart/monthly/n/" + cache.get(x.label.split(" ")[0].trim()) + ".gif?_+" + Math.random() + "'></td></tr></table>"
+		panel.webview.html = html
+	}));
 
 	setInterval(_ => { showStock(false) }, parseInt(<string>vscode.workspace.getConfiguration("hkmd").get("stockRefresh")) * 1000)
 	showStock(true)
@@ -119,6 +129,7 @@ async function showStock(force: boolean) {
 			name = JSON.parse('["' + res.data.split("~")[2] + '"]')[0]
 			cache.set(code, name)
 		}
+		if (!cache.has(name)) cache.set(name, code)
 
 		let rs = await Axios.get("http://hq.sinajs.cn/list=" + code)
 		let arr = rs.data.split(",")

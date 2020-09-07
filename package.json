@@ -2,7 +2,7 @@
 	"name": "hkmd",
 	"displayName": "hkmd",
 	"description": "",
-	"version": "0.0.12",
+	"version": "0.0.13",
 	"engines": {
 		"vscode": "^1.48.0"
 	},
@@ -20,6 +20,10 @@
 			{
 				"command": "hkmd.search",
 				"title": "HK Markdown docs"
+			},
+			{
+				"command": "stockList.click",
+				"title": "Detail"
 			}
 		],
 		"configuration": {
@@ -47,6 +51,15 @@
 				{
 					"id": "stockList",
 					"name": "Stock List"
+				}
+			]
+		},
+		"menus": {
+			"view/item/context": [
+				{
+					"command": "stockList.click",
+					"when": "view == stockList",
+					"group": "inline"
 				}
 			]
 		}
