@@ -2,7 +2,7 @@
 	"name": "hkmd",
 	"displayName": "hkmd",
 	"description": "",
-	"version": "0.0.13",
+	"version": "0.0.14",
 	"engines": {
 		"vscode": "^1.48.0"
 	},
@@ -24,7 +24,7 @@
 			},
 			{
 				"command": "hkmd.stock",
-				"title": "HK Stock Watch"
+				"title": "HK Stock Watch Open/Close"
 			},
 			{
 				"command": "stockList.click",

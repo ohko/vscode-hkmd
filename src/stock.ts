@@ -31,6 +31,7 @@ export class StockListProvider implements vscode.TreeDataProvider<TreeItem> {
    private panel: vscode.WebviewPanel | undefined;
    private stockList: TreeItem[] = []
    private cache: Map<string, string> = new Map<string, string>()
+   private timer!: NodeJS.Timeout
 
    constructor(context: vscode.ExtensionContext) {
       this.context = context
@@ -39,7 +40,14 @@ export class StockListProvider implements vscode.TreeDataProvider<TreeItem> {
       context.subscriptions.push(vscode.commands.registerCommand('stockList.click', this.itemClick.bind(this)));
 
       context.subscriptions.push(vscode.commands.registerCommand('hkmd.stock', _ => {
-         setInterval(_ => { this.showStock(false) }, parseInt(<string>vscode.workspace.getConfiguration("hkmd").get("stockRefresh")) * 1000)
+         if (this.timer && this.timer.hasRef()) {
+            clearInterval(this.timer)
+
+            this.stockList.length = 0
+            this.refresh()
+            return
+         }
+         this.timer = setInterval(_ => { this.showStock(false) }, parseInt(<string>vscode.workspace.getConfiguration("hkmd").get("stockRefresh")) * 1000)
          this.showStock(true)
       }));
    }
@@ -51,20 +59,20 @@ export class StockListProvider implements vscode.TreeDataProvider<TreeItem> {
 
    getTreeItem(element: TreeItem): TreeItem {
       // arrow
-      let arrow = "     "
-      if (element.costPrice > 0) {
-         if (element.nowPrice > element.costPrice) arrow = " ↑ "
-         else if (element.nowPrice < element.costPrice) arrow = " ↓ "
-      } else {
-         if (element.yestodayPrice > element.nowPrice) arrow = " ↓ "
-         else if (element.yestodayPrice < element.nowPrice) arrow = " ↑ "
-      }
+      // let arrow = "     "
+      // if (element.costPrice > 0) {
+      //    if (element.nowPrice > element.costPrice) arrow = " ↑ "
+      //    else if (element.nowPrice < element.costPrice) arrow = " ↓ "
+      // } else {
+      //    if (element.yestodayPrice > element.nowPrice) arrow = " ↓ "
+      //    else if (element.yestodayPrice < element.nowPrice) arrow = " ↑ "
+      // }
 
       // diffSecond
       let now = new Date()
       let diffSecond = (now.getTime() - new Date(now.toLocaleDateString() + " " + element.time).getTime()) / 1000
 
-      let label = (element.tips.length == 0 ? element.name : "") + arrow + "(" + element.per.toFixed(2) + "%) " + "¥" + (element.tips.length == 0 ? element.nowPrice : element.costPrice) + element.tips
+      let label = (element.tips.length == 0 ? element.name : "") + " (" + element.per.toFixed(2) + "%) " + "¥" + (element.tips.length == 0 ? element.nowPrice : element.costPrice) + element.tips
       if (diffSecond > 180) label += " ∞"
       else if (diffSecond > 60) label += " +" + diffSecond.toFixed(0) + "s"
       element.label = label
@@ -92,6 +100,7 @@ export class StockListProvider implements vscode.TreeDataProvider<TreeItem> {
             x.per = (x.nowPrice - x.costPrice) / x.costPrice * 100
          }
 
+         x.tooltip = x.code
          list.push(x)
       }
 
@@ -138,6 +147,7 @@ export class StockListProvider implements vscode.TreeDataProvider<TreeItem> {
             this.cache.set(code, name)
          }
 
+         // https://cloud.tencent.com/developer/article/1534790
          let rs = await Axios.get("http://hq.sinajs.cn/list=" + code)
          let arr = rs.data.split(",")
          let yestoday = parseFloat(arr[2])
@@ -152,10 +162,35 @@ export class StockListProvider implements vscode.TreeDataProvider<TreeItem> {
 
    async itemClick(x: TreeItem) {
       try { this.panel!.title = x.name } catch (e) { this.panel = vscode.window.createWebviewPanel(x.code, x.name, vscode.ViewColumn.One) }
-      let html = "<script>alert(1)</script><table><tr><td><img src='http://image.sinajs.cn/newchart/min/n/" + x.code + ".gif?_+" + Math.random() + "'></td>"
-      html += "<td><img src='http://image.sinajs.cn/newchart/daily/n/" + x.code + ".gif?_+" + Math.random() + "'></td></tr>"
-      html += "<tr><td><img src='http://image.sinajs.cn/newchart/weekly/n/" + x.code + ".gif?_+" + Math.random() + "'></td>"
-      html += "<td><img src='http://image.sinajs.cn/newchart/monthly/n/" + x.code + ".gif?_+" + Math.random() + "'></td></tr></table>"
+
+      let html = "<a href='http://quote.eastmoney.com/" + x.code + ".html'>东方财富</a>"
+      html += " | <a href='https://finance.sina.com.cn/realstock/company/" + x.code + "/nc.shtml'>新浪财经</a>"
+      html += " | <a href='http://stockpage.10jqka.com.cn/" + (x.code.substr(2)) + "/'>同花顺</a>"
+      html += " | <a href='http://doctor.10jqka.com.cn/" + (x.code.substr(2)) + "/'>牛叉诊股</a>"
+      html += " | <a href='https://robo.datayes.com/v2/stock/" + (x.code.substr(2)) + "/overview#STOCK_TREND'>萝卜投研</a>"
+      html += " | <a href='http://gu.qq.com/" + x.code + "/gp'>腾讯证券</a>"
+      html += " | <a href='http://gu.qq.com/" + x.code + "/gp/news'>腾讯证券::个股新闻</a>"
+      html += " | <a href='http://gu.qq.com/" + x.code + "/gp/notice'>腾讯证券::个股公告</a>"
+
+      // sina
+      // http://image.sinajs.cn/newchart/min/n/sh6033631.gif
+      // html += "<table><tr><td><img src='http://image.sinajs.cn/newchart/min/n/" + x.code + ".gif?_+" + Math.random() + "'></td>"
+      // html += "<td><img src='http://image.sinajs.cn/newchart/daily/n/" + x.code + ".gif?_+" + Math.random() + "'></td></tr>"
+      // html += "<tr><td><img src='http://image.sinajs.cn/newchart/weekly/n/" + x.code + ".gif?_+" + Math.random() + "'></td>"
+      // html += "<td><img src='http://image.sinajs.cn/newchart/monthly/n/" + x.code + ".gif?_+" + Math.random() + "'></td></tr></table>"
+      // this.panel!.webview.html = html
+
+      // eastmoney
+      // http://webquotepic.eastmoney.com/GetPic.aspx?id=6033631&imageType=r
+      // http://webquotepic.eastmoney.com/GetPic.aspx?id=6033631&imageType=rc
+      // http://webquoteklinepic.eastmoney.com/GetPic.aspx?nid=1.603363&imageType=KXL&Formula=MACD&type=
+      // http://webquoteklinepic.eastmoney.com/GetPic.aspx?nid=1.603363&imageType=KXL&Formula=MACD&type=W
+      // http://webquoteklinepic.eastmoney.com/GetPic.aspx?nid=1.603363&imageType=KXL&Formula=MACD&type=M
+      let code = (x.code.substr(0, 2) == "sz" ? "0." : "1.") + x.code.substr(2)
+      html += "<table><tr><td><img src='http://webquotepic.eastmoney.com/GetPic.aspx?nid=" + code + "&imageType=rc&_=" + Math.random() + "'></td>"
+      html += "<td><img src='http://webquoteklinepic.eastmoney.com/GetPic.aspx?nid=" + code + "&imageType=KXL&Formula=MACD&type=&_=" + Math.random() + "'></td></tr>"
+      html += "<tr><td><img src='http://webquoteklinepic.eastmoney.com/GetPic.aspx?nid=" + code + "&imageType=KXL&Formula=MACD&type=W&_=" + Math.random() + "'></td>"
+      html += "<td><img src='http://webquoteklinepic.eastmoney.com/GetPic.aspx?nid=" + code + "&imageType=KXL&Formula=MACD&type=M&_=" + Math.random() + "'></td></tr></table>"
       this.panel!.webview.html = html
    }
 }
