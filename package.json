@@ -24,7 +24,8 @@
 			},
 			{
 				"command": "hkmd.stock",
-				"title": "HK Stock Watch Open/Close"
+				"title": "HK Stock Watch Open/Close",
+				"icon": "media/dep.png"
 			},
 			{
 				"command": "stockList.click",
@@ -60,6 +61,13 @@
 			]
 		},
 		"menus": {
+			"view/title": [
+				{
+					"command": "hkmd.stock",
+					"when": "view == stockList",
+					"group": "navigation"
+				}
+			],
 			"view/item/context": [
 				{
 					"command": "stockList.click",
