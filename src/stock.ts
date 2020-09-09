@@ -72,7 +72,9 @@ export class StockListProvider implements vscode.TreeDataProvider<TreeItem> {
       let now = new Date()
       let diffSecond = (now.getTime() - new Date(now.toLocaleDateString() + " " + element.time).getTime()) / 1000
 
-      let label = (element.tips.length == 0 ? element.name : "") + " (" + element.per.toFixed(2) + "%) " + "¥" + (element.tips.length == 0 ? element.nowPrice : element.costPrice) + element.tips
+      let per2 = (element.nowPrice - element.yestodayPrice) / element.yestodayPrice * 100
+      let label = element.name + " (" + element.per.toFixed(2) + "% / " + per2.toFixed(2) + "%) ¥" + element.nowPrice
+      if (element.tips.length != 0) label = " (" + element.per.toFixed(2) + "%) ¥" + element.costPrice + element.tips
       if (diffSecond > 180) label += " ∞"
       else if (diffSecond > 60) label += " +" + diffSecond.toFixed(0) + "s"
       element.label = label
