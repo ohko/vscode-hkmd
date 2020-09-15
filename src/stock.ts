@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import Axios from 'axios';
+import { runInThisContext } from 'vm';
 
 class TreeItem extends vscode.TreeItem {
    code!: string;
@@ -14,7 +15,8 @@ class TreeItem extends vscode.TreeItem {
    constructor(code: string, name: string, yestodayPrice: number, nowPrice: number, costPrice: number, time: string, tips: string, collapsibleState?: vscode.TreeItemCollapsibleState) {
       super(name, collapsibleState)
 
-      if (name.length != 4) name += "    ".repeat(4 - name.length)
+      if (name == "undefined") name = code
+      if (name.length < 4) name += "....".repeat(4 - name.length)
 
       this.code = code
       this.name = name
@@ -31,23 +33,26 @@ export class StockListProvider implements vscode.TreeDataProvider<TreeItem> {
    private panel: vscode.WebviewPanel | undefined;
    private stockList: TreeItem[] = []
    private cache: Map<string, string> = new Map<string, string>()
+   private stop: boolean
    private timer!: NodeJS.Timeout
 
    constructor(context: vscode.ExtensionContext) {
       this.context = context
+      this.stop = true
 
       vscode.window.createTreeView('stockList', { treeDataProvider: this });
       context.subscriptions.push(vscode.commands.registerCommand('stockList.click', this.itemClick.bind(this)));
 
       context.subscriptions.push(vscode.commands.registerCommand('hkmd.stock', _ => {
-         if (this.timer && this.timer.hasRef()) {
-            clearInterval(this.timer)
+         if (!this.stop) {
+            this.stop = true
+            clearTimeout(this.timer)
 
             this.stockList.length = 0
             this.refresh()
             return
          }
-         this.timer = setInterval(_ => { this.showStock(false) }, parseInt(<string>vscode.workspace.getConfiguration("hkmd").get("stockRefresh")) * 1000)
+         this.stop = false
          this.showStock(true)
       }));
    }
@@ -74,7 +79,7 @@ export class StockListProvider implements vscode.TreeDataProvider<TreeItem> {
 
       let per2 = (element.nowPrice - element.yestodayPrice) / element.yestodayPrice * 100
       let label = element.name + " (" + element.per.toFixed(2) + "% / " + per2.toFixed(2) + "%) ¥" + element.nowPrice
-      if (element.tips.length != 0) label = " (" + element.per.toFixed(2) + "%) ¥" + element.costPrice + element.tips
+      if (element.tips.length != 0) label = element.name + " (" + element.per.toFixed(2) + "%) ¥" + element.costPrice + element.tips
       if (diffSecond > 180) label += " ∞"
       else if (diffSecond > 60) label += " +" + diffSecond.toFixed(0) + "s"
       element.label = label
@@ -116,7 +121,7 @@ export class StockListProvider implements vscode.TreeDataProvider<TreeItem> {
    }
 
 
-   async showStock(force: boolean) {
+   async showStock(force: boolean = false) {
       let codes = <string[]>vscode.workspace.getConfiguration("hkmd").get("stock")
       if (!codes) return vscode.window.showInformationMessage(`setting: [hkmd.stock] not found!`);
 
@@ -130,6 +135,8 @@ export class StockListProvider implements vscode.TreeDataProvider<TreeItem> {
 
       this.stockList.length = 0
       for (let i in codes) {
+         if (this.stop) break
+
          let code = codes[i]
          let base = 0.0
          let tips = ""
@@ -159,7 +166,10 @@ export class StockListProvider implements vscode.TreeDataProvider<TreeItem> {
          this.stockList.push(new TreeItem(code, name, yestoday, price, base, time, tips))
       }
 
-      this.refresh()
+      if (!this.stop) {
+         this.refresh()
+         this.timer = setTimeout(this.showStock.bind(this), parseInt(<string>vscode.workspace.getConfiguration("hkmd").get("stockRefresh")) * 1000)
+      }
    }
 
    async itemClick(x: TreeItem) {
