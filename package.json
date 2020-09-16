@@ -67,13 +67,6 @@
 					"when": "view == stockList",
 					"group": "navigation"
 				}
-			],
-			"view/item/context": [
-				{
-					"command": "stockList.click",
-					"when": "view == stockList",
-					"group": "inline"
-				}
 			]
 		}
 	},

@@ -134,37 +134,41 @@ export class StockListProvider implements vscode.TreeDataProvider<TreeItem> {
       }
 
       this.stockList.length = 0
-      for (let i in codes) {
-         if (this.stop) break
+      try {
+         for (let i in codes) {
+            if (this.stop) break
 
-         let code = codes[i]
-         let base = 0.0
-         let tips = ""
+            let code = codes[i]
+            let base = 0.0
+            let tips = ""
 
-         if (code.indexOf(",") > 0) {
-            let tmp = code.split(",")
-            code = tmp[0].trim()
-            base = parseFloat(tmp[1].trim())
-            if (tmp.length == 3) tips = " [" + tmp[2].trim() + "]"
+            if (code.indexOf(",") > 0) {
+               let tmp = code.split(",")
+               code = tmp[0].trim()
+               base = parseFloat(tmp[1].trim())
+               if (tmp.length == 3) tips = " [" + tmp[2].trim() + "]"
+            }
+
+            let name: string
+            if (this.cache.has(code)) name = this.cache.get(code)!;
+            else {
+               let res = await Axios.get("http://smartbox.gtimg.cn/s3/?v=2&q=" + code.substr(2) + "&t=all&c=1")
+               name = JSON.parse('["' + res.data.split("~")[2] + '"]')[0]
+               this.cache.set(code, name)
+            }
+
+            // https://cloud.tencent.com/developer/article/1534790
+            let rs = await Axios.get("http://hq.sinajs.cn/list=" + code)
+            let arr = rs.data.split(",")
+            let yestoday = parseFloat(arr[2])
+            let price = parseFloat(arr[3])
+            let time = arr[31]
+
+            let item = new TreeItem(code, name, yestoday, price, base, time, tips)
+            item.command = { title: "detail", command: "stockList.click", arguments: [item] }
+            this.stockList.push(item)
          }
-
-         let name: string
-         if (this.cache.has(code)) name = this.cache.get(code)!;
-         else {
-            let res = await Axios.get("http://smartbox.gtimg.cn/s3/?v=2&q=" + code.substr(2) + "&t=all&c=1")
-            name = JSON.parse('["' + res.data.split("~")[2] + '"]')[0]
-            this.cache.set(code, name)
-         }
-
-         // https://cloud.tencent.com/developer/article/1534790
-         let rs = await Axios.get("http://hq.sinajs.cn/list=" + code)
-         let arr = rs.data.split(",")
-         let yestoday = parseFloat(arr[2])
-         let price = parseFloat(arr[3])
-         let time = arr[31]
-
-         this.stockList.push(new TreeItem(code, name, yestoday, price, base, time, tips))
-      }
+      } catch (e) { }
 
       if (!this.stop) {
          this.refresh()
