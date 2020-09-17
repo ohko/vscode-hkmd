@@ -181,21 +181,6 @@ export class StockListProvider implements vscode.TreeDataProvider<TreeItem> {
    async itemClick(x: TreeItem) {
       try { this.panel!.title = x.name } catch (e) { this.panel = vscode.window.createWebviewPanel(x.code, x.name, vscode.ViewColumn.One) }
 
-      // https://cloud.tencent.com/developer/article/1534790
-      let rs = await Axios.get("http://hq.sinajs.cn/list=" + x.code)
-      let arr = rs.data.split(",")
-      let now = arr[3]
-      let buy1 = [arr[11], arr[10]]
-      let buy2 = [arr[13], arr[12]]
-      let buy3 = [arr[15], arr[14]]
-      let buy4 = [arr[17], arr[16]]
-      let buy5 = [arr[19], arr[18]]
-      let sell1 = [arr[21], arr[20]]
-      let sell2 = [arr[23], arr[22]]
-      let sell3 = [arr[25], arr[24]]
-      let sell4 = [arr[27], arr[26]]
-      let sell5 = [arr[29], arr[28]]
-
       let html = "<a href='http://quote.eastmoney.com/" + x.code + ".html'>东方财富</a>"
       html += " | <a href='https://finance.sina.com.cn/realstock/company/" + x.code + "/nc.shtml'>新浪财经</a>"
       html += " | <a href='http://stockpage.10jqka.com.cn/" + (x.code.substr(2)) + "/'>同花顺</a>"
@@ -221,12 +206,30 @@ export class StockListProvider implements vscode.TreeDataProvider<TreeItem> {
       // http://webquoteklinepic.eastmoney.com/GetPic.aspx?nid=1.603363&imageType=KXL&Formula=MACD&type=M
       let code = (x.code.substr(0, 2) == "sz" ? "0." : "1.") + x.code.substr(2)
       html += "<table><tr><td><img src='http://webquotepic.eastmoney.com/GetPic.aspx?nid=" + code + "&imageType=rc&_=" + Math.random() + "'></td>"
-      html += "<td><img src='http://webquoteklinepic.eastmoney.com/GetPic.aspx?nid=" + code + "&imageType=KXL&Formula=MACD&type=&_=" + Math.random() + "'></td>"
-      let bsell = "", bbuy = ""
-      if (now == sell1[0]) bsell = "style='font-weight:bold'"
-      if (now == buy1[0]) bbuy = "style='font-weight:bold'"
-      html += "<td><table border='1'><tr><td>" + sell5[0] + "</td><td align='right'>" + sell5[1] + "</td></tr><tr><td>" + sell4[0] + "</td><td align='right'>" + sell4[1] + "</td></tr><tr><td>" + sell3[0] + "</td><td align='right'>" + sell3[1] + "</td></tr><tr><td>" + sell2[0] + "</td><td align='right'>" + sell2[1] + "</td></tr><tr " + bsell + "><td>" + sell1[0] + "</td><td align='right'>" + sell1[1] + "</td></tr><tr><td colspan='2'></td></tr><tr " + bbuy + "><td>" + buy1[0] + "</td><td align='right'>" + buy1[1] + "</td></tr><tr><td>" + buy2[0] + "</td><td align='right'>" + buy2[1] + "</td></tr><tr><td>" + buy3[0] + "</td><td align='right'>" + buy3[1] + "</td></tr><tr><td>" + buy4[0] + "</td><td align='right'>" + buy4[1] + "</td></tr><tr><td>" + buy5[0] + "</td><td align='right'>" + buy5[1] + "</td></tr></table></td></tr>"
-      html += "<tr><td valign='top'><img src='http://webquoteklinepic.eastmoney.com/GetPic.aspx?nid=" + code + "&imageType=KXL&Formula=MACD&type=W&_=" + Math.random() + "'></td>"
+      html += "<td><img src='http://webquoteklinepic.eastmoney.com/GetPic.aspx?nid=" + code + "&imageType=KXL&Formula=MACD&type=&_=" + Math.random() + "'></td><td>"
+
+      try {
+         // https://cloud.tencent.com/developer/article/1534790
+         let rs = await Axios.get("http://hq.sinajs.cn/list=" + x.code)
+         let arr = rs.data.split(",")
+         let now = arr[3]
+         let buy1 = [arr[11], arr[10]]
+         let buy2 = [arr[13], arr[12]]
+         let buy3 = [arr[15], arr[14]]
+         let buy4 = [arr[17], arr[16]]
+         let buy5 = [arr[19], arr[18]]
+         let sell1 = [arr[21], arr[20]]
+         let sell2 = [arr[23], arr[22]]
+         let sell3 = [arr[25], arr[24]]
+         let sell4 = [arr[27], arr[26]]
+         let sell5 = [arr[29], arr[28]]
+         let bsell = "", bbuy = ""
+         if (now == sell1[0]) bsell = "style='font-weight:bold'"
+         if (now == buy1[0]) bbuy = "style='font-weight:bold'"
+         html += "<table border='1'><tr><td>" + sell5[0] + "</td><td align='right'>" + sell5[1] + "</td></tr><tr><td>" + sell4[0] + "</td><td align='right'>" + sell4[1] + "</td></tr><tr><td>" + sell3[0] + "</td><td align='right'>" + sell3[1] + "</td></tr><tr><td>" + sell2[0] + "</td><td align='right'>" + sell2[1] + "</td></tr><tr " + bsell + "><td>" + sell1[0] + "</td><td align='right'>" + sell1[1] + "</td></tr><tr><td colspan='2'></td></tr><tr " + bbuy + "><td>" + buy1[0] + "</td><td align='right'>" + buy1[1] + "</td></tr><tr><td>" + buy2[0] + "</td><td align='right'>" + buy2[1] + "</td></tr><tr><td>" + buy3[0] + "</td><td align='right'>" + buy3[1] + "</td></tr><tr><td>" + buy4[0] + "</td><td align='right'>" + buy4[1] + "</td></tr><tr><td>" + buy5[0] + "</td><td align='right'>" + buy5[1] + "</td></tr></table>"
+      } catch (e) { }
+
+      html += "</td></tr><tr><td valign='top'><img src='http://webquoteklinepic.eastmoney.com/GetPic.aspx?nid=" + code + "&imageType=KXL&Formula=MACD&type=W&_=" + Math.random() + "'></td>"
       html += "<td><img src='http://webquoteklinepic.eastmoney.com/GetPic.aspx?nid=" + code + "&imageType=KXL&Formula=MACD&type=M&_=" + Math.random() + "'></td></tr></table>"
       this.panel!.webview.html = html
    }
