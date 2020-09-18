@@ -79,7 +79,7 @@ export class StockListProvider implements vscode.TreeDataProvider<TreeItem> {
 
       let per2 = (element.nowPrice - element.yestodayPrice) / element.yestodayPrice * 100
       let label = element.name + " (" + element.per.toFixed(2) + "% / " + per2.toFixed(2) + "%) ¥" + element.nowPrice
-      if (element.tips.length != 0) label = element.name + " (" + element.per.toFixed(2) + "%) ¥" + element.costPrice + element.tips
+      if (element.tips.length != 0) label = element.name + " (" + element.per.toFixed(2) + "%) ¥" + element.costPrice + "/" + (element.costPrice * 1.0011).toFixed(2) + element.tips
       if (diffSecond > 180) label += " ∞"
       else if (diffSecond > 60) label += " +" + diffSecond.toFixed(0) + "s"
       element.label = label
@@ -156,6 +156,11 @@ export class StockListProvider implements vscode.TreeDataProvider<TreeItem> {
             else {
                let res = await Axios.get("http://smartbox.gtimg.cn/s3/?v=2&q=" + code.substr(2) + "&t=all&c=1")
                name = JSON.parse('["' + res.data.split("~")[2] + '"]')[0]
+               if (name == "undefined") {
+                  res = await Axios.get("http://news.10jqka.com.cn/public/index_keyboard_" + code.substr(2) + "_stock,hk,usa_5_jsonp.html",
+                     { headers: { "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36" } })
+                  name = JSON.parse('["' + res.data.split(" ")[1] + '"]')[0]
+               }
                this.cache.set(code, name)
             }
 
@@ -213,16 +218,16 @@ export class StockListProvider implements vscode.TreeDataProvider<TreeItem> {
          let rs = await Axios.get("http://hq.sinajs.cn/list=" + x.code)
          let arr = rs.data.split(",")
          let now = arr[3]
-         let buy1 = [arr[11], arr[10]]
-         let buy2 = [arr[13], arr[12]]
-         let buy3 = [arr[15], arr[14]]
-         let buy4 = [arr[17], arr[16]]
-         let buy5 = [arr[19], arr[18]]
-         let sell1 = [arr[21], arr[20]]
-         let sell2 = [arr[23], arr[22]]
-         let sell3 = [arr[25], arr[24]]
-         let sell4 = [arr[27], arr[26]]
-         let sell5 = [arr[29], arr[28]]
+         let buy1 = [arr[11], (arr[10] / 100).toFixed(0)]
+         let buy2 = [arr[13], (arr[12] / 100).toFixed(0)]
+         let buy3 = [arr[15], (arr[14] / 100).toFixed(0)]
+         let buy4 = [arr[17], (arr[16] / 100).toFixed(0)]
+         let buy5 = [arr[19], (arr[18] / 100).toFixed(0)]
+         let sell1 = [arr[21], (arr[20] / 100).toFixed(0)]
+         let sell2 = [arr[23], (arr[22] / 100).toFixed(0)]
+         let sell3 = [arr[25], (arr[24] / 100).toFixed(0)]
+         let sell4 = [arr[27], (arr[26] / 100).toFixed(0)]
+         let sell5 = [arr[29], (arr[28] / 100).toFixed(0)]
          let bsell = "", bbuy = ""
          if (now == sell1[0]) bsell = "style='font-weight:bold'"
          if (now == buy1[0]) bbuy = "style='font-weight:bold'"
