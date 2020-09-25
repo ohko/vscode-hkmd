@@ -79,7 +79,7 @@ export class StockListProvider implements vscode.TreeDataProvider<TreeItem> {
 
       let per2 = (element.nowPrice - element.yestodayPrice) / element.yestodayPrice * 100
       let label = element.name + " (" + element.per.toFixed(2) + "% / " + per2.toFixed(2) + "%) ¥" + element.nowPrice
-      if (element.tips.length != 0) label = element.name + " (" + element.per.toFixed(2) + "%) ¥" + element.costPrice + "/" + (element.costPrice * 1.0011).toFixed(2) + element.tips
+      if (element.tips.length != 0) label = element.name + " (" + element.per.toFixed(2) + "%) ¥" + element.costPrice + "/" + (element.costPrice * 1.0211).toFixed(3) + element.tips
       if (diffSecond > 180) label += " ∞"
       else if (diffSecond > 60) label += " +" + diffSecond.toFixed(0) + "s"
       element.label = label
@@ -106,7 +106,7 @@ export class StockListProvider implements vscode.TreeDataProvider<TreeItem> {
          // per
          x.per = (x.nowPrice - x.yestodayPrice) / x.yestodayPrice * 100
          if (x.costPrice > 0) {
-            x.per = (x.nowPrice - x.costPrice) / x.nowPrice * 100
+            x.per = (x.nowPrice - x.costPrice) / x.costPrice * 100
          }
 
          x.tooltip = x.code
@@ -234,8 +234,8 @@ export class StockListProvider implements vscode.TreeDataProvider<TreeItem> {
          html += "<table border='1'><tr><td>" + sell5[0] + "</td><td align='right'>" + sell5[1] + "</td></tr><tr><td>" + sell4[0] + "</td><td align='right'>" + sell4[1] + "</td></tr><tr><td>" + sell3[0] + "</td><td align='right'>" + sell3[1] + "</td></tr><tr><td>" + sell2[0] + "</td><td align='right'>" + sell2[1] + "</td></tr><tr " + bsell + "><td>" + sell1[0] + "</td><td align='right'>" + sell1[1] + "</td></tr><tr><td colspan='2'></td></tr><tr " + bbuy + "><td>" + buy1[0] + "</td><td align='right'>" + buy1[1] + "</td></tr><tr><td>" + buy2[0] + "</td><td align='right'>" + buy2[1] + "</td></tr><tr><td>" + buy3[0] + "</td><td align='right'>" + buy3[1] + "</td></tr><tr><td>" + buy4[0] + "</td><td align='right'>" + buy4[1] + "</td></tr><tr><td>" + buy5[0] + "</td><td align='right'>" + buy5[1] + "</td></tr></table>"
       } catch (e) { }
 
-      html += "</td></tr><tr><td valign='top'><img src='http://webquoteklinepic.eastmoney.com/GetPic.aspx?nid=" + code + "&imageType=KXL&Formula=MACD&type=W&_=" + Math.random() + "'></td>"
-      html += "<td><img src='http://webquoteklinepic.eastmoney.com/GetPic.aspx?nid=" + code + "&imageType=KXL&Formula=MACD&type=M&_=" + Math.random() + "'></td></tr></table>"
+      html += "</td></tr><tr><td valign='top'><img src='http://webquoteklinepic.eastmoney.com/GetPic.aspx?nid=" + code + "&imageType=KXL&Formula=MACD&type=W'></td>"
+      html += "<td><img src='http://webquoteklinepic.eastmoney.com/GetPic.aspx?nid=" + code + "&imageType=KXL&Formula=MACD&type=M'></td></tr></table>"
       this.panel!.webview.html = html
    }
 }
