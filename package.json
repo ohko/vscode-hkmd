@@ -45,6 +45,11 @@
 					"default": 8,
 					"description": "stock refresh time of second"
 				},
+				"hkmd.stockDiffPercent": {
+					"type": "number",
+					"default": 1.0111,
+					"description": "stock diff percent"
+				},
 				"hkmd.stock": {
 					"type": "array",
 					"default": [],

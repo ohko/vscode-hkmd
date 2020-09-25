@@ -76,10 +76,11 @@ export class StockListProvider implements vscode.TreeDataProvider<TreeItem> {
       // diffSecond
       let now = new Date()
       let diffSecond = (now.getTime() - new Date(now.toLocaleDateString() + " " + element.time).getTime()) / 1000
+      let diffPercent = <number>vscode.workspace.getConfiguration("hkmd").get("stockDiffPercent", 1.0111)
 
       let per2 = (element.nowPrice - element.yestodayPrice) / element.yestodayPrice * 100
       let label = element.name + " (" + element.per.toFixed(2) + "% / " + per2.toFixed(2) + "%) ¥" + element.nowPrice
-      if (element.tips.length != 0) label = element.name + " (" + element.per.toFixed(2) + "%) ¥" + element.costPrice + "/" + (element.costPrice * 1.0211).toFixed(3) + element.tips
+      if (element.tips.length != 0) label = element.name + " (" + element.per.toFixed(2) + "%) ¥" + element.costPrice + "/" + (element.costPrice * diffPercent).toFixed(3) + element.tips
       if (diffSecond > 180) label += " ∞"
       else if (diffSecond > 60) label += " +" + diffSecond.toFixed(0) + "s"
       element.label = label
@@ -124,7 +125,7 @@ export class StockListProvider implements vscode.TreeDataProvider<TreeItem> {
 
 
    async showStock(force: boolean = false) {
-      let codes = <string[]>vscode.workspace.getConfiguration("hkmd").get("stock")
+      let codes = <string[]>vscode.workspace.getConfiguration("hkmd").get("stock", ["sh000001"])
       if (!codes) return vscode.window.showInformationMessage(`setting: [hkmd.stock] not found!`);
 
       let t = new Date()
@@ -179,7 +180,7 @@ export class StockListProvider implements vscode.TreeDataProvider<TreeItem> {
 
       if (!this.stop) {
          this.refresh()
-         this.timer = setTimeout(this.showStock.bind(this), parseInt(<string>vscode.workspace.getConfiguration("hkmd").get("stockRefresh")) * 1000)
+         this.timer = setTimeout(this.showStock.bind(this), <number>vscode.workspace.getConfiguration("hkmd").get("stockRefresh", 5) * 1000)
       }
    }
 
