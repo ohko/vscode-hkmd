@@ -185,9 +185,14 @@ export class StockListProvider implements vscode.TreeDataProvider<TreeItem> {
    }
 
    async itemClick(x: TreeItem) {
-      try { this.panel!.title = x.name } catch (e) { this.panel = vscode.window.createWebviewPanel(x.code, x.name, vscode.ViewColumn.One) }
+      try { this.panel!.title = x.name } catch (e) { this.panel = vscode.window.createWebviewPanel("x.code", x.name, vscode.ViewColumn.One, { enableScripts: true }) }
 
-      let html = "<a href='http://quote.eastmoney.com/" + x.code + ".html'>东方财富</a>"
+      let cczq = "https://chuancai.mdengta.com/intelligentDiagnosis.html?seccode=" + (x.code.substr(0, 2) == "sz" ? "0001" : "0101") + (x.code.substr(2)) + "&secname=" + (x.name) + "&webviewType=userActivitesType&dt_page_type=11&dt_sbt=2&fromTool=true"
+      let lbty = "https://huaanweb.wmcloud.com/stockDiagnose?stockId=" + (x.code.substr(2)) + "&stockName=" + (x.name) + "&hasPermission=true&roboApp=1"
+      let html = ""
+      html += "<a href='" + cczq + "'>川财证券</a>"
+      html += " | <a href='" + lbty + "'>萝卜投研</a>"
+      html += " | <a href='http://quote.eastmoney.com/" + x.code + ".html'>东方财富</a>"
       html += " | <a href='https://finance.sina.com.cn/realstock/company/" + x.code + "/nc.shtml'>新浪财经</a>"
       html += " | <a href='http://stockpage.10jqka.com.cn/" + (x.code.substr(2)) + "/'>同花顺</a>"
       html += " | <a href='http://doctor.10jqka.com.cn/" + (x.code.substr(2)) + "/'>牛叉诊股</a>"
@@ -237,6 +242,10 @@ export class StockListProvider implements vscode.TreeDataProvider<TreeItem> {
 
       html += "</td></tr><tr><td valign='top'><img src='http://webquoteklinepic.eastmoney.com/GetPic.aspx?nid=" + code + "&imageType=KXL&Formula=MACD&type=W'></td>"
       html += "<td><img src='http://webquoteklinepic.eastmoney.com/GetPic.aspx?nid=" + code + "&imageType=KXL&Formula=MACD&type=M'></td></tr></table>"
+
+      html += "<iframe src='" + cczq + "' style='width:375px;height:3000px'></iframe>"
+      html += "<iframe src='" + lbty + "' style='width:375px;height:3000px'></iframe>"
+
       this.panel!.webview.html = html
    }
 }
