@@ -84,8 +84,13 @@ export class StockListProvider implements vscode.TreeDataProvider<TreeItem> {
       if (diffSecond > 180) label += " ∞"
       else if (diffSecond > 60) label += " +" + diffSecond.toFixed(0) + "s"
       element.label = label
-      if (element.per > 0) element.iconPath = path.join(__filename, '..', '..', 'media', 'arrow-up.svg')
-      else if (element.per < 0) element.iconPath = path.join(__filename, '..', '..', 'media', 'arrow-down.svg')
+      if (element.tips.length == 0) {
+         if (per2 > 0) element.iconPath = path.join(__filename, '..', '..', 'media', 'arrow-up.svg')
+         else if (per2 < 0) element.iconPath = path.join(__filename, '..', '..', 'media', 'arrow-down.svg')
+      } else {
+         if (element.per > 0) element.iconPath = path.join(__filename, '..', '..', 'media', 'arrow-up.svg')
+         else if (element.per < 0) element.iconPath = path.join(__filename, '..', '..', 'media', 'arrow-down.svg')
+      }
 
       return element
    }
